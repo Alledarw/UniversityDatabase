@@ -64,3 +64,6 @@ WHERE c.is_opening = TRUE -- only opening registered, comment out if you want to
 ORDER BY w.course_code, w.created_date;
 
 SELECT * FROM course_queue_position;
+
+
+-- FRONTEND, search by student number and get course and grade

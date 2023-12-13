@@ -26,7 +26,8 @@ CREATE TABLE limited_courses (
 CREATE TABLE course_prerequisites (
   course_code VARCHAR(10) REFERENCES courses(course_code),
   prerequisites_course VARCHAR(6) REFERENCES courses(course_code),
-  PRIMARY KEY (course_code, prerequisites_course)
+  PRIMARY KEY (course_code, prerequisites_course),
+  CHECK (course_code <> prerequisites_course) -- Ensure a course can't be a prerequisite of itself
 );
 
 CREATE TABLE courses (
@@ -111,12 +112,16 @@ CREATE TABLE waiting_list (
   course_code VARCHAR(10) REFERENCES courses(course_code),
   student_idnr VARCHAR(10) REFERENCES students(idnr),
   created_date TIMESTAMP,
-  PRIMARY KEY (course_code, student_idnr)
+  PRIMARY KEY (course_code, student_idnr),
+    -- The CHECK query is an alternative to replace a trigger fucntion. It's not the recommended solution
+  CHECK (
+    (SELECT COUNT(*) FROM waiting_list WHERE course_code = waiting_list.course_code) <= 5
+  )
 );
-
 
 /* Test */
 SELECT * FROM students;
+SELECT * FROM taken;
 
 ---------------------------------- INSERT SAMPLE DATA-----------------------------------
 
@@ -132,7 +137,7 @@ INSERT INTO programs (program_code, program_name) VALUES
   ('PRO-202', 'Bachelor of Electrical Systems'),
   ('PRO-203', 'Bachelor of Mechanical Design');
 
--- Insert data into the institutions_programs_relations table
+-- Institutions_programs_relations table
 INSERT INTO institutions_programs_relations (institution_code, program_code)
 VALUES
   ('INST-101', 'PRO-201'),
@@ -181,7 +186,7 @@ VALUES
 -- Course prerequisites
 INSERT INTO course_prerequisites (course_code, prerequisites_course) VALUES
     ('C-403', 'C-401'),
-    ('C-403', 'C-402');
+    ('C-402', 'C-401');
 
 -- Students
 INSERT INTO students (idnr, first_name, last_name, program_code) VALUES
@@ -223,42 +228,86 @@ INSERT INTO student_branches (student_idnr, program_code, branch_code) VALUES
 --------------------------------- TESTING QUERIES ------------------------------------------------
 
 -- Query 1: Two branches with the same name but on different programs
-SELECT branch_code, name, program_code, COUNT(*)
+-- Insert sample data into the branches table
+INSERT INTO branches (branch_code, name, program_code)
+VALUES
+  ('BR-311', 'Software Development', 'PRO-202');  -- Same name as branch BR-301 but different program
+
+SELECT name, COUNT(DISTINCT program_code) AS program_count
 FROM branches
-GROUP BY branch_code, name, program_code
-HAVING COUNT(*) > 1;
+GROUP BY name
+HAVING COUNT(DISTINCT program_code) > 1;
+
 
 -- Query 2: A student who has not taken any courses
 SELECT s.idnr, s.first_name, s.last_name
 FROM students s
 LEFT JOIN taken t ON s.idnr = t.student_idnr
 WHERE t.taken_id IS NULL;
+-- In a scenario where 'U' equals as a course not taken we can use this query instead
+-- WHERE t.taken_id IS NULL OR COALESCE(t.grade, '') = 'U';
 
--- Query 3: A student who has only received failing grades
+
+-- Query 3: A student who has only received failing grades. Inserted student STD2012 with grade 'U' to test
+INSERT INTO taken(course_code, student_idnr, grade)
+VALUES
+    ('C-401', 'STD2012', 'U');
+
 SELECT s.idnr, s.first_name, s.last_name
 FROM students s
 INNER JOIN taken t ON s.idnr = t.student_idnr
 WHERE t.grade = 'U';
 
--- Query 4: A student who has not chosen any branch
+-- Query 4: A student who has not chosen any branch. Inserting test student to try the query
+INSERT INTO students (idnr, first_name, last_name, program_code) VALUES
+    ('STD2021', 'Alex', 'Test', 'PRO-201');
+
 SELECT s.idnr, s.first_name, s.last_name
 FROM students s
 LEFT JOIN student_branches sb ON s.idnr = sb.student_idnr
 WHERE sb.student_idnr IS NULL;
 
--- Query 5: A waiting list can only exist for limited courses
-SELECT w.course_code, w.student_idnr, c.course_code
-FROM waiting_list w
-LEFT JOIN limited_courses c ON w.course_code = c.course_code
-WHERE c.course_code IS NULL;
+-- Query 5: A waiting list can only exist for limited courses *
+-- Insert data into the waiting_list table for a non-limited course
+INSERT INTO waiting_list (course_code, student_idnr, created_date)
+VALUES
+  ('C-401', 'STD2001', NOW());  -- Non-limited course
 
--- Query 6: A course prerequisite must be a course that exists
-SELECT cp.course_code, cp.prerequisites_course, c.course_code AS prerequisites_exist
-FROM course_prerequisites cp
-LEFT JOIN courses c ON cp.prerequisites_course = c.course_code
-WHERE c.course_code IS NULL;
+-- Insert data into the waiting_list table for a limited course
+INSERT INTO waiting_list (course_code, student_idnr, created_date)
+VALUES
+  ('C-403', 'STD2002', NOW()),  -- Limited course
+  ('C-403', 'STD2003', NOW()),
+  ('C-403', 'STD2004', NOW()),
+  ('C-403', 'STD2005', NOW()),
+  ('C-403', 'STD2006', NOW()),
+  ('C-403', 'STD2007', NOW());  -- This exceeds the limit for course C-403
 
--- Query 7: A student cannot be registered for a course and on the waiting list simultaneously
-SELECT r.course_code, r.student_idnr
-FROM registered r
-INNER JOIN waiting_list w ON r.course_code = w.course_code AND r.student_idnr = w.student_idnr;
+-- You can use a trigger function to prevent the query from adding more students after exceeded limit
+
+SELECT course_code, COUNT(*) AS waiting_list_count
+FROM waiting_list
+GROUP BY course_code
+HAVING COUNT(*) > 0;
+
+-- Query 6: Try to insert a course prerequisite with itself
+INSERT INTO course_prerequisites (course_code, prerequisites_course)
+VALUES ('C-401', 'C-401'); -- Use an existing course code
+-- Added CHECK to the course_prerequisites table to prevent query 6 from happening
+
+-- Query 7: Find Students Who Have Exceeded the Maximum Credits
+SELECT
+  s.idnr,
+  s.first_name,
+  s.last_name,
+  SUM(c.credits) AS total_credits
+FROM
+  students s
+JOIN
+  taken t ON s.idnr = t.student_idnr
+JOIN
+  courses c ON t.course_code = c.course_code
+GROUP BY
+  s.idnr, s.first_name, s.last_name
+HAVING
+  SUM(c.credits) > 500; -- Replace 150 with the desired maximum credits
