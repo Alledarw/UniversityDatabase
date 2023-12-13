@@ -137,6 +137,12 @@ INSERT INTO programs (program_code, program_name) VALUES
   ('PRO-202', 'Bachelor of Electrical Systems'),
   ('PRO-203', 'Bachelor of Mechanical Design');
 
+-- Insert sample data into mandatory_program table
+INSERT INTO mandatory_program (program_code, course_code)
+VALUES
+  ('PRO-201', 'C-401'),
+  ('PRO-202', 'C-402');
+
 -- Institutions_programs_relations table
 INSERT INTO institutions_programs_relations (institution_code, program_code)
 VALUES

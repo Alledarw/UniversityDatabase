@@ -19,7 +19,7 @@ SELECT * FROM finished_courses;
 
 -- Create passed_courses View
 CREATE VIEW passed_courses AS
-SELECT t.student_idnr AS student, t.course_code AS course, c.credits
+SELECT t.student_idnr AS student, t.course_code AS course, c.credits, t.grade
 FROM taken t
 JOIN courses c ON t.course_code = c.course_code
 WHERE t.grade IN ('A', 'B', 'C', 'D', 'E');
@@ -36,17 +36,21 @@ FROM waiting_list w;
 
 SELECT * FROM registrations;
 
--- Create unread_mandatory View
+-- Create unread_mandatory view
 CREATE VIEW unread_mandatory AS
-SELECT s.idnr AS student, mb.course_code AS course
-FROM students s
-JOIN mandatory_program mp ON s.program_code = mp.program_code
-JOIN mandatory_branch mb ON mp.program_code = mb.program_code
-WHERE NOT EXISTS (
+SELECT
+  s.idnr AS student,
+  mp.course_code AS course
+FROM
+  students s
+JOIN
+  mandatory_program mp ON s.program_code = mp.program_code
+WHERE
+  NOT EXISTS (
     SELECT 1
     FROM taken t
-    WHERE t.student_idnr = s.idnr AND t.course_code = mb.course_code
-);
+    WHERE t.student_idnr = s.idnr AND t.course_code = mp.course_code
+  );
 
 SELECT * FROM unread_mandatory;
 
