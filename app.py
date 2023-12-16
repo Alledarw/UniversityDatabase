@@ -1,5 +1,9 @@
+from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from psycopg2 import connect, DatabaseError
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -11,7 +15,7 @@ def execute_query(query, parameters=None, fetchall=False):
             dbname="universityDB",
             user="postgres",
             host="localhost",
-            password="Admin123",
+            password=os.getenv("DB_PASSWORD")
         )
         with conn.cursor() as cursor:
             cursor.execute(query, parameters)
@@ -37,11 +41,12 @@ def submit():
     last_name = request.form.get("last_name")
     program_code = request.form.get("program_code")
 
-    # Insert the data into the 'students' table
+    # SQL INJECTION - SAFE
     # Using parameterized queries (like %s) helps prevent SQL injection by automatically escaping and quoting the values.
     query = "INSERT INTO students (idnr, first_name, last_name, program_code) VALUES (%s, %s, %s, %s)"
     parameters = (idnr, first_name, last_name, program_code)
 
+    # SQL INJECTION - UNSAFE
     # WARNING: This is vulnerable to SQL injection.
     # query = (
     #    f"INSERT INTO students (idnr, first_name, last_name, program_code) "
