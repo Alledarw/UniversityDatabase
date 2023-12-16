@@ -316,7 +316,7 @@ JOIN
 GROUP BY
   s.idnr, s.first_name, s.last_name
 HAVING
-  SUM(c.credits) > 500; -- Replace 150 with the desired maximum credits
+  SUM(c.credits) > 500; -- Replace with the desired maximum credits
 
 
 SELECT * FROM students;

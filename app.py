@@ -47,7 +47,9 @@ def submit():
     parameters = (idnr, first_name, last_name, program_code)
 
     # SQL INJECTION - UNSAFE
-    # WARNING: This is vulnerable to SQL injection.
+    # To test an SQL injection, try the following in any of the data fields in index.html: ' OR '1'='1
+    # See if the SQL error message disappears. If it disappears it could be a sign that the site is vulnerable to an SQL injection attack.
+
     # query = (
     #    f"INSERT INTO students (idnr, first_name, last_name, program_code) "
     #    f"VALUES ('{idnr}', '{first_name}', '{last_name}', '{program_code}')"
