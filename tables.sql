@@ -113,7 +113,7 @@ CREATE TABLE waiting_list (
   student_idnr VARCHAR(10) REFERENCES students(idnr),
   created_date TIMESTAMP,
   PRIMARY KEY (course_code, student_idnr),
-    -- The CHECK query is an alternative to replace a trigger fucntion. It's not the recommended solution
+    -- The CHECK query is an alternative to replace a trigger function. It's not the recommended solution
   CHECK (
     (SELECT COUNT(*) FROM waiting_list WHERE course_code = waiting_list.course_code) <= 5
   )
@@ -317,3 +317,6 @@ GROUP BY
   s.idnr, s.first_name, s.last_name
 HAVING
   SUM(c.credits) > 500; -- Replace 150 with the desired maximum credits
+
+
+SELECT * FROM students;
