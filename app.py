@@ -48,8 +48,12 @@ def submit():
     WHERE students.idnr = '{student_idnr}';
     """
     query_result = execute_query(query, fetchall=True)
-    if query_result is None:
-        query_result = []
+
+    # Check if the student ID exists
+    if not query_result:
+        message = f"No data found for student with ID: {student_idnr}"
+        return render_template("index.html", message=message, data=query_result)
+
     return render_template("index.html", data=query_result)
 
 

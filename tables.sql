@@ -315,4 +315,3 @@ GROUP BY
   s.idnr, s.first_name, s.last_name
 HAVING
   SUM(c.credits) > 500; -- Replace with the desired maximum credits
-

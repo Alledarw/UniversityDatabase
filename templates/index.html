@@ -4,37 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Course and Grade Database</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   </head>
-  <body
-    style="
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    "
-  >
+  <body>
     <h1>Student Course and Grade Database</h1>
     <p>Enter student ID to view courses and grades</p>
+    <p>Student ID format: STD0000</p>
     <form action="/submit" method="post">
       <input name="student_idnr" type="text" />
       <button type="submit">Submit</button>
     </form>
-    <table>
-      <thead>
-        <th>Course Code</th>
-        <th>Course Name</th>
-        <th>Grade</th>
-      </thead>
-      <tbody>
-        {% for row in data %}
-        <tr>
-          <td>{{ row[0] }}</td>
-          <td>{{ row[1] }}</td>
-          <td>{{ row[2] }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+    <!-- Check if there's a message to display -->
+    {% if message %}
+      <p>{{ message }}</p>
+    {% else %}
+      <table>
+        <thead>
+          <th>Course Code</th>
+          <th>Course Name</th>
+          <th>Grade</th>
+        </thead>
+        <tbody>
+          {% for row in data %}
+          <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
   </body>
 </html>
