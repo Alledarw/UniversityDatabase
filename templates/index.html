@@ -1,38 +1,40 @@
-<!-- templates/index.html -->
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Registration</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>Student Registration</h1>
-
-    <form method="POST" action="/submit">
-        <label for="idnr">ID Number:</label>
-        <input type="text" id="idnr" name="idnr" required>
-
-        <label for="first_name">First Name:</label>
-        <input type="text" id="first_name" name="first_name" required>
-
-        <label for="last_name">Last Name:</label>
-        <input type="text" id="last_name" name="last_name" required>
-
-        <label for="program_code">Program Code:</label>
-        <input type="text" id="program_code" name="program_code" required>
-
-        <button type="submit">Register</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Course and Grade Database</title>
+  </head>
+  <body
+    style="
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    "
+  >
+    <h1>Student Course and Grade Database</h1>
+    <p>Enter student ID to view courses and grades</p>
+    <form action="/submit" method="post">
+      <input name="student_idnr" type="text" />
+      <button type="submit">Submit</button>
     </form>
-
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
-
-    {% if message %}
-        <p class="message">{{ message }}</p>
-    {% endif %}
-</body>
+    <table>
+      <thead>
+        <th>Course Code</th>
+        <th>Course Name</th>
+        <th>Grade</th>
+      </thead>
+      <tbody>
+        {% for row in data %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          <td>{{ row[1] }}</td>
+          <td>{{ row[2] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
 </html>

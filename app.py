@@ -1,6 +1,8 @@
-from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from psycopg2 import connect, DatabaseError
+from dotenv import load_dotenv
+from psycopg2 import DatabaseError, connect
+
 import os
 
 load_dotenv()
@@ -34,35 +36,45 @@ def render_index():
     return render_template("index.html")
 
 
+# UNSAFE - Vulnerable to SQL injections
 @app.route("/submit", methods=["POST"])
 def submit():
-    idnr = request.form.get("idnr")
-    first_name = request.form.get("first_name")
-    last_name = request.form.get("last_name")
-    program_code = request.form.get("program_code")
+    student_idnr = request.form.get("student_idnr")
+    query = f"""
+    SELECT courses.course_code, courses.name AS course_name, taken.grade
+    FROM students
+    JOIN taken ON students.idnr = taken.student_idnr
+    JOIN courses ON taken.course_code = courses.course_code
+    WHERE students.idnr = '{student_idnr}';
+    """
+    query_result = execute_query(query, fetchall=True)
+    if query_result is None:
+        query_result = []
+    return render_template("index.html", data=query_result)
 
-    # SQL INJECTION - SAFE
-    # Using parameterized queries (like %s) helps prevent SQL injection by automatically escaping and quoting the values.
-    query = "INSERT INTO students (idnr, first_name, last_name, program_code) VALUES (%s, %s, %s, %s)"
-    parameters = (idnr, first_name, last_name, program_code)
 
-    # SQL INJECTION - UNSAFE
-    # To test an SQL injection, try the following in any of the data fields in index.html: ' OR '1'='1
-    # See if the SQL error message disappears. If it disappears it could be a sign that the site is vulnerable to an SQL injection attack.
+# SAFE - Safe against SQL injections
+#  # Using parameterized queries (like %s) helps prevent SQL injection by automatically escaping and quoting the values.
 
-    # query = (
-    #    f"INSERT INTO students (idnr, first_name, last_name, program_code) "
-    #    f"VALUES ('{idnr}', '{first_name}', '{last_name}', '{program_code}')"
-    # )
-
-    try:
-        execute_query(query, parameters)
-        message = "Student registered successfully!"
-    except DatabaseError as e:
-        print(e)
-        message = "Error registering student. Please try again."
-
-    return render_template("index.html", message=message)
+# @app.route("/submit", methods=["POST"])
+# def submit():
+#     student_idnr = request.form.get("student_idnr")
+#
+#     # SQL query using parameterized query
+#     query = """
+#     SELECT courses.course_code, courses.name AS course_name, taken.grade
+#     FROM students
+#     JOIN taken ON students.idnr = taken.student_idnr
+#     JOIN courses ON taken.course_code = courses.course_code
+#     WHERE students.idnr = %s;
+#     """
+#
+#     parameters = (student_idnr,)
+#
+#     query_result = execute_query(query, parameters, fetchall=True)
+#     if query_result is None:
+#         query_result = []
+#     return render_template("index.html", data=query_result)
 
 
 if __name__ == "__main__":

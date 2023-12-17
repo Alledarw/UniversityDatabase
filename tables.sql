@@ -119,9 +119,6 @@ CREATE TABLE waiting_list (
   )
 );
 
-/* Test */
-SELECT * FROM students;
-SELECT * FROM taken;
 
 ---------------------------------- INSERT SAMPLE DATA-----------------------------------
 
@@ -289,6 +286,7 @@ VALUES
   ('C-403', 'STD2006', NOW()),
   ('C-403', 'STD2007', NOW());  -- This exceeds the limit for course C-403
 
+
 -- You can use a trigger function to prevent the query from adding more students after exceeded limit
 
 SELECT course_code, COUNT(*) AS waiting_list_count
@@ -318,5 +316,3 @@ GROUP BY
 HAVING
   SUM(c.credits) > 500; -- Replace with the desired maximum credits
 
-
-SELECT * FROM students;
